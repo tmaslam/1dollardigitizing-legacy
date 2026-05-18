@@ -30,11 +30,7 @@
                     window.location.href = '/account-upgrade.php';
                 }
             } else {
-                var issues = [];
-                if (orders > 0) issues.push('orders');
-                if (quotes > 0) issues.push('quotes');
-                if (billing > 0) issues.push('billings');
-                alert('First you need to clear your ' + issues.join(' / ') + ' then you will be able to switch your account.');
+                alert('To switch your account, please ensure all outstanding billing is cleared first.');
             }
         });
     </script>
