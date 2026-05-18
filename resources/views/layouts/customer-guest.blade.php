@@ -23,15 +23,15 @@
             ['label' => 'Vector Art', 'href' => url('/vector-art.php')],
         ];
         $companyLinks = [
-            ['label' => 'About Us', 'href' => url('/about-us.php')],
-            ['label' => 'Our Quality', 'href' => url('/our-quality.php')],
-            ['label' => 'Contact Us', 'href' => url('/contact-us.php')],
+            ['label' => 'About Us', 'href' => 'https://1dollardigitizing.com/'],
+            ['label' => 'Our Quality', 'href' => 'https://1dollardigitizing.com/'],
+            ['label' => 'Contact Us', 'href' => 'https://1dollardigitizing.com/'],
         ];
         $resourceLinks = [
-            ['label' => 'Our Prices', 'href' => url('/price-plan.php')],
-            ['label' => 'Formats', 'href' => url('/formats.php')],
-            ['label' => 'Privacy Policy', 'href' => url('/privacy-policy.php')],
-            ['label' => 'Terms and Conditions', 'href' => url('/terms.php')],
+            ['label' => 'Our Prices', 'href' => 'https://1dollardigitizing.com/'],
+            ['label' => 'Formats', 'href' => 'https://1dollardigitizing.com/'],
+            ['label' => 'Privacy Policy', 'href' => 'https://1dollardigitizing.com/'],
+            ['label' => 'Terms and Conditions', 'href' => 'https://1dollardigitizing.com/'],
         ];
     @endphp
     <style>
@@ -723,7 +723,7 @@
                         </div>
                         <div class="footer-contact-item">
                             <span>Need Help?</span>
-                            <a class="footer-link" href="/contact-us.php">Contact Our Team</a>
+                            <a class="footer-link" href="https://1dollardigitizing.com/">Contact Our Team</a>
                         </div>
                     </div>
                 </div>
