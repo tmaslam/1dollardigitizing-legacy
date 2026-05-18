@@ -191,7 +191,10 @@
                     <span style="color: #64748b; font-size: 0.95rem;">Additionally, You will continue to have access to download your previously paid orders.</span>
                 </div>
             </div>
-            <button type="button" id="btn-upgrade" class="button" disabled style="background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); color: #fff; font-weight: 600; white-space: nowrap; padding: 10px 22px; border-radius: 10px; border: none; cursor: not-allowed; opacity: 0.6;">Upgrade your account</button>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                <button type="button" id="btn-upgrade" class="button" disabled style="background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); color: #fff; font-weight: 600; white-space: nowrap; padding: 10px 22px; border-radius: 10px; border: none; cursor: not-allowed; opacity: 0.6;">Upgrade your account</button>
+                <span style="color: #64748b; font-size: 0.85rem; font-style: italic;">Feature not available yet but coming soon</span>
+            </div>
         </div>
     </div>
     @else
