@@ -3,7 +3,7 @@
 @section('title', 'Dashboard - '.$siteContext->displayLabel())
 @section('hero_class', 'hero-compact dashboard-hero')
 @section('hero_title', 'Dashboard')
-@section('hero_text', 'Track your orders, quotes, billing, downloads, and account details in one streamlined workspace.')
+@section('hero_text', 'Upgrade to our new system to enjoy up to 20% off all future purchases. Don\'t worry—your order history remains fully accessible on the legacy platform.')
 
 @section('content')
     <section class="content-card">
