@@ -120,6 +120,7 @@ Route::middleware('detect.site')->group(function () use ($adminPrefix, $internal
     Route::post('/quotes/{order}/feedback', [CustomerPortalController::class, 'quoteFeedback'])->middleware('customer.auth');
     Route::post('/quotes/{order}/delete', [CustomerPortalController::class, 'deleteQuote'])->middleware('customer.auth');
     Route::post('/view-billing.php/pay-all', [CustomerPaymentController::class, 'startOutstanding'])->middleware('customer.auth');
+    Route::post('/view-billing.php/pay-with-deposit', [CustomerPortalController::class, 'payWithDeposit'])->middleware('customer.auth');
     Route::post('/view-billing.php/{billing}/pay', [CustomerPaymentController::class, 'startSingle'])->middleware('customer.auth');
     Route::get('/member-offer.php', [CustomerPaymentController::class, 'showSignupOffer'])->middleware('customer.auth');
     Route::post('/member-offer.php/pay', [CustomerPaymentController::class, 'startSignupOffer'])->middleware('customer.auth');

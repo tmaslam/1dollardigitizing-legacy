@@ -240,6 +240,40 @@ class CustomerPortalController extends Controller
         ]);
     }
 
+    public function payWithDeposit(Request $request)
+    {
+        $customer = $this->customer($request);
+        $site = $this->site($request);
+
+        $billings = $this->unpaidBillingQuery($customer, $site)
+            ->with('order')
+            ->orderBy('bill_id')
+            ->get();
+
+        if ($billings->isEmpty()) {
+            return redirect('/view-billing.php')->with('success', 'No outstanding invoices to pay.');
+        }
+
+        $totalOutstanding = $billings->sum(function ($billing) {
+            return (float) ($billing->order?->total_amount ?: $billing->amount);
+        });
+
+        $deposit = CustomerBalance::deposit($customer->topup);
+
+        if ($deposit + 0.0001 < $totalOutstanding) {
+            return redirect('/view-billing.php')->with('error', 'Insufficient deposit balance. Your deposit is $' . number_format($deposit, 2) . ' but outstanding total is $' . number_format($totalOutstanding, 2) . '.');
+        }
+
+        $paidCount = 0;
+        foreach ($billings as $billing) {
+            if (CustomerBalance::applyToBilling($billing, 'customer-deposit')) {
+                $paidCount++;
+            }
+        }
+
+        return redirect('/view-billing.php')->with('success', $paidCount . ' invoice(s) paid successfully using your deposit balance.');
+    }
+
     public function archive(Request $request)
     {
         $customer = $this->customer($request);

@@ -30,6 +30,12 @@
                 <strong>{{ $billingSummary['invoice_count'] }}</strong>
             </div>
         </div>
+        @if ($billingRows->count() && $depositBalance > 0)
+            <form method="post" action="/view-billing.php/pay-with-deposit" style="margin-top: 16px;">
+                @csrf
+                <button type="submit" class="button" style="background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); color: #fff; font-weight: 600; padding: 10px 22px; border-radius: 10px; border: none; cursor: pointer;">Pay with Deposit</button>
+            </form>
+        @endif
     </section>
 
     <section class="content-card">
