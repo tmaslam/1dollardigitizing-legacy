@@ -287,9 +287,12 @@ class CustomerPortalController extends Controller
             'user_term' => 'upgraded',
         ]);
 
+        $secret = '9p16O7dpkzwZc8y6rbwGTzKcnfYZqiXFQj534uwk1Ig=';
+        $token = $this->makeUpgradeToken($customer->user_id, $secret);
+
         return response()->json([
             'success' => true,
-            'redirect' => 'https://1dollardigitizing.com/migration.php?legacy_customer_id=' . urlencode(encrypt($customer->user_id)),
+            'redirect' => 'https://1dollardigitizing.com/migration.php?legacy_customer_id=' . urlencode($token),
         ]);
     }
 
@@ -1022,6 +1025,16 @@ class CustomerPortalController extends Controller
         $clean = preg_replace('/[^0-9.\-]/', '', (string) $value);
 
         return is_numeric($clean) ? round((float) $clean, 2) : 0.0;
+    }
+
+    private function makeUpgradeToken(int $userId, string $secret): string
+    {
+        $key       = hash('sha256', $secret, true);
+        $iv        = random_bytes(16);
+        $payload   = $userId . ':' . time();
+        $encrypted = openssl_encrypt($payload, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
+
+        return rtrim(strtr(base64_encode($iv . $encrypted), '+/', '-_'), '=');
     }
 
     private function detailBackLink(Request $request, bool $isQuote): array
