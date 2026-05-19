@@ -19,9 +19,8 @@ class SignupOfferService
 
     public static function available(SiteContext $site): bool
     {
-        return $site->id !== null
-            && Schema::hasTable('site_promotions')
-            && Schema::hasTable('site_promotion_claims');
+        // Signup offer system is disabled
+        return false;
     }
 
     public static function activeSignupOffer(SiteContext $site): ?SitePromotion
@@ -418,38 +417,8 @@ class SignupOfferService
 
     public static function applyEligibleFirstOrderAmount(Order $order, float $amount): float
     {
-        $claim = self::eligiblePaidClaimForOrder($order);
-        if (! $claim) {
-            return round($amount, 2);
-        }
-
-        $snapshot = self::claimSnapshot($claim);
-        $stitchThreshold = self::configInteger($snapshot, 'first_order_free_under_stitches', 0);
-
-        if ($stitchThreshold > 0) {
-            if (self::qualifiesForFreeUnderStitches($order, $stitchThreshold)) {
-                return 0.0;
-            }
-
-            // Charge only for stitches above the threshold (proportional).
-            // Example: 12k stitches on a 10k threshold at $X → charge (2k/12k) × $X.
-            $excessCharge = self::excessStitchCharge($order, $stitchThreshold, $amount);
-            if ($excessCharge !== null) {
-                return $excessCharge;
-            }
-        }
-
-        // Flat-amount offer only applies to digitizing orders, not vector/color.
-        if (! in_array((string) $order->order_type, ['order', 'digitzing'], true)) {
-            return round($amount, 2);
-        }
-
-        $flatAmount = round((float) $claim->first_order_flat_amount, 2);
-        if ($flatAmount <= 0) {
-            return round($amount, 2);
-        }
-
-        return $flatAmount;
+        // Signup offer system is disabled — no pricing adjustments
+        return round($amount, 2);
     }
 
     private static function excessStitchCharge(Order $order, int $stitchThreshold, float $fullAmount): ?float
@@ -490,58 +459,14 @@ class SignupOfferService
 
     public static function customerShouldCompleteOfferPayment(SiteContext $site, AdminUser $customer): bool
     {
-        return self::pendingPaymentClaimForCustomer($site, $customer) !== null;
+        // Signup offer system is disabled
+        return false;
     }
 
     private static function eligiblePaidClaimForOrder(Order $order): ?SitePromotionClaim
     {
-        if (! Schema::hasTable('site_promotion_claims') || ! Schema::hasTable('orders')) {
-            return null;
-        }
-
-        $website = self::effectiveWebsiteKeyForOrder($order);
-
-        // Also match a claim already redeemed for this exact order so that
-        // re-approvals (admin editing after initial approval) continue to
-        // respect the free-order benefit instead of reverting to full price.
-        $claimQuery = SitePromotionClaim::query()
-            ->with('promotion')
-            ->where('user_id', $order->user_id)
-            ->where(function ($q) use ($order) {
-                $q->where(function ($paid) {
-                    $paid->where('status', self::STATUS_PAID)
-                         ->whereNull('redeemed_order_id');
-                })->orWhere(function ($redeemed) use ($order) {
-                    $redeemed->where('status', self::STATUS_REDEEMED)
-                             ->where('redeemed_order_id', $order->order_id);
-                });
-            });
-
-        self::applyWebsiteFilter($claimQuery, 'website', $website);
-
-        $claim = $claimQuery->orderBy('id')->first();
-
-        if (! $claim) {
-            return null;
-        }
-
-        if (! self::claimCountsAsCompletedOffer($claim)) {
-            return null;
-        }
-
-        $firstEligibleOrderId = Order::query()
-            ->active()
-            ->where('user_id', $order->user_id)
-            ->forWebsite($website)
-            ->whereIn('order_type', ['order', 'vector', 'color', 'digitzing'])
-            ->orderBy('order_id')
-            ->value('order_id');
-
-        if ((int) $firstEligibleOrderId !== (int) $order->order_id) {
-            return null;
-        }
-
-        return $claim;
+        // Signup offer system is disabled
+        return null;
     }
 
     private static function configMoney(array $config, string $key, float $default = 0.0): float
