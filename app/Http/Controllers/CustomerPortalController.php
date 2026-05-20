@@ -362,6 +362,69 @@ class CustomerPortalController extends Controller
         ]);
     }
 
+    public function downloadPaidOrdersZip(Request $request)
+    {
+        $customer = $this->customer($request);
+        $site = $this->site($request);
+
+        $dateFrom = trim((string) $request->query('date_from', ''));
+        $dateTo   = trim((string) $request->query('date_to', ''));
+
+        $query = $this->paidOrdersQuery($customer, $site)->orderBy('order_id');
+
+        if ($dateFrom !== '') {
+            $query->whereDate('completion_date', '>=', $dateFrom);
+        }
+        if ($dateTo !== '') {
+            $query->whereDate('completion_date', '<=', $dateTo);
+        }
+
+        $orders = $query->get();
+
+        $tmpDir = storage_path('app/temp');
+        if (! is_dir($tmpDir)) {
+            mkdir($tmpDir, 0755, true);
+        }
+
+        $tmpFile = $tmpDir . '/paid_orders_' . uniqid() . '.zip';
+        $zip = new \ZipArchive();
+        if ($zip->open($tmpFile, \ZipArchive::CREATE) !== true) {
+            abort(500, 'Could not create ZIP archive.');
+        }
+
+        foreach ($orders as $order) {
+            $released = CustomerAttachmentAccess::releasedAttachments($order);
+            $sources  = CustomerAttachmentAccess::sourceAttachments($order);
+
+            $orderRef = $order->order_num ?: $order->order_id;
+
+            foreach ($released as $attachment) {
+                $fullPath = CustomerAttachmentAccess::absolutePath($attachment);
+                if (is_file($fullPath)) {
+                    $fileName = (string) ($attachment->file_name ?: basename($fullPath));
+                    $zip->addFile($fullPath, 'order_' . $orderRef . '/' . $fileName);
+                }
+            }
+
+            foreach ($sources as $attachment) {
+                $fullPath = CustomerAttachmentAccess::absolutePath($attachment);
+                if (is_file($fullPath)) {
+                    $fileName = (string) ($attachment->file_name ?: basename($fullPath));
+                    $zip->addFile($fullPath, 'order_' . $orderRef . '/source file - ' . $fileName);
+                }
+            }
+        }
+
+        $zip->close();
+
+        $suffix = '';
+        if ($dateFrom !== '' || $dateTo !== '') {
+            $suffix = '-' . ($dateFrom ?: 'start') . '-to-' . ($dateTo ?: 'end');
+        }
+
+        return response()->download($tmpFile, 'paid-orders' . $suffix . '.zip')->deleteFileAfterSend(true);
+    }
+
     public function download(Request $request)
     {
         $customer = $this->customer($request);

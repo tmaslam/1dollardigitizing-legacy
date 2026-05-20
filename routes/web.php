@@ -98,6 +98,7 @@ Route::middleware('detect.site')->group(function () use ($adminPrefix, $internal
     Route::get('/view-quote-detail.php', [CustomerPortalController::class, 'showQuote'])->middleware('customer.auth');
     Route::get('/view-billing.php', [CustomerPortalController::class, 'billing'])->middleware('customer.auth');
     Route::get('/view-archive-orders.php', [CustomerPortalController::class, 'archive'])->middleware('customer.auth');
+    Route::get('/download-paid-orders.php', [CustomerPortalController::class, 'downloadPaidOrdersZip'])->middleware('customer.auth');
     Route::get('/view-paid-orders.php', [CustomerAccountController::class, 'paidAdvanceOrders'])->middleware('customer.auth');
     Route::get('/view-invoices.php', [CustomerAccountController::class, 'invoices'])->middleware('customer.auth');
     Route::get('/view-invoice-detail.php', [CustomerAccountController::class, 'invoiceDetail'])->middleware('customer.auth');
