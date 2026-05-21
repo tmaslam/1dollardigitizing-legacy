@@ -6,6 +6,7 @@ use App\Models\AdminUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
@@ -17,12 +18,16 @@ class TrustedTwoFactorDevice
     public static function shouldSkipChallenge(Request $request, string $portal, AdminUser $user, ?string $siteLegacyKey = null): bool
     {
         if (! Schema::hasTable(self::TABLE)) {
+            Log::warning('TrustedTwoFactorDevice: table does not exist.', ['table' => self::TABLE, 'portal' => $portal]);
+
             return false;
         }
 
         [$selector, $validator] = self::cookieParts($request, $portal, $siteLegacyKey);
 
         if ($selector === null || $validator === null) {
+            Log::info('TrustedTwoFactorDevice: no cookie present.', ['portal' => $portal, 'cookie_name' => self::cookieName($portal, $siteLegacyKey)]);
+
             return false;
         }
 
@@ -43,15 +48,26 @@ class TrustedTwoFactorDevice
         $record = $query->first();
 
         if (! $record) {
+            Log::info('TrustedTwoFactorDevice: no DB record found.', ['portal' => $portal, 'user_id' => $user->user_id, 'selector' => $selector]);
             self::forgetCookie($portal, $siteLegacyKey);
 
             return false;
         }
 
-        $valid = hash_equals((string) $record->token_hash, hash('sha256', $validator))
-            && hash_equals((string) $record->user_agent_hash, self::userAgentHash($request));
+        $tokenValid = hash_equals((string) $record->token_hash, hash('sha256', $validator));
+        $uaValid    = hash_equals((string) $record->user_agent_hash, self::userAgentHash($request));
 
-        if (! $valid) {
+        if (! $tokenValid || ! $uaValid) {
+            Log::info('TrustedTwoFactorDevice: validation failed.', [
+                'portal' => $portal,
+                'user_id' => $user->user_id,
+                'selector' => $selector,
+                'token_valid' => $tokenValid,
+                'ua_valid' => $uaValid,
+                'stored_ua_hash' => $record->user_agent_hash,
+                'request_ua_hash' => self::userAgentHash($request),
+                'request_ua' => $request->userAgent(),
+            ]);
             DB::table(self::TABLE)->where('id', $record->id)->delete();
             self::forgetCookie($portal, $siteLegacyKey);
 
@@ -70,6 +86,7 @@ class TrustedTwoFactorDevice
             ]);
 
         self::queueCookie($request, $portal, $siteLegacyKey, $selector, $newValidator);
+        Log::info('TrustedTwoFactorDevice: challenge skipped, token rotated.', ['portal' => $portal, 'user_id' => $user->user_id, 'selector' => $selector]);
 
         return true;
     }
@@ -77,6 +94,8 @@ class TrustedTwoFactorDevice
     public static function issue(Request $request, string $portal, AdminUser $user, ?string $siteLegacyKey = null): void
     {
         if (! Schema::hasTable(self::TABLE)) {
+            Log::warning('TrustedTwoFactorDevice.issue: table does not exist.', ['table' => self::TABLE, 'portal' => $portal]);
+
             return;
         }
 
@@ -86,20 +105,27 @@ class TrustedTwoFactorDevice
         $validator = bin2hex(random_bytes(32));
         $now = now();
 
-        DB::table(self::TABLE)->insert([
-            'portal' => $portal,
-            'site_legacy_key' => $portal === 'customer' ? (string) ($siteLegacyKey ?? '') : '',
-            'user_id' => (int) $user->user_id,
-            'selector' => $selector,
-            'token_hash' => hash('sha256', $validator),
-            'user_agent_hash' => self::userAgentHash($request),
-            'password_signature' => self::passwordSignature($user),
-            'expires_at' => $now->copy()->addDays(self::LIFETIME_DAYS)->format('Y-m-d H:i:s'),
-            'last_used_at' => $now->format('Y-m-d H:i:s'),
-            'created_at' => $now->format('Y-m-d H:i:s'),
-        ]);
+        try {
+            DB::table(self::TABLE)->insert([
+                'portal' => $portal,
+                'site_legacy_key' => $portal === 'customer' ? (string) ($siteLegacyKey ?? '') : '',
+                'user_id' => (int) $user->user_id,
+                'selector' => $selector,
+                'token_hash' => hash('sha256', $validator),
+                'user_agent_hash' => self::userAgentHash($request),
+                'password_signature' => self::passwordSignature($user),
+                'expires_at' => $now->copy()->addDays(self::LIFETIME_DAYS)->format('Y-m-d H:i:s'),
+                'last_used_at' => $now->format('Y-m-d H:i:s'),
+                'created_at' => $now->format('Y-m-d H:i:s'),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('TrustedTwoFactorDevice.issue: insert failed.', ['portal' => $portal, 'user_id' => $user->user_id, 'error' => $e->getMessage()]);
+
+            return;
+        }
 
         self::queueCookie($request, $portal, $siteLegacyKey, $selector, $validator);
+        Log::info('TrustedTwoFactorDevice.issue: trusted device issued.', ['portal' => $portal, 'user_id' => $user->user_id, 'selector' => $selector, 'cookie_name' => self::cookieName($portal, $siteLegacyKey)]);
     }
 
     public static function revokeCurrent(Request $request, string $portal, ?string $siteLegacyKey = null): void
