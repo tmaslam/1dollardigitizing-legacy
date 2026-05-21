@@ -54,19 +54,11 @@ class TrustedTwoFactorDevice
             return false;
         }
 
-        $tokenValid = hash_equals((string) $record->token_hash, hash('sha256', $validator));
-        $uaValid    = hash_equals((string) $record->user_agent_hash, self::userAgentHash($request));
-
-        if (! $tokenValid || ! $uaValid) {
-            Log::info('TrustedTwoFactorDevice: validation failed.', [
+        if (! hash_equals((string) $record->token_hash, hash('sha256', $validator))) {
+            Log::info('TrustedTwoFactorDevice: token hash mismatch.', [
                 'portal' => $portal,
                 'user_id' => $user->user_id,
                 'selector' => $selector,
-                'token_valid' => $tokenValid,
-                'ua_valid' => $uaValid,
-                'stored_ua_hash' => $record->user_agent_hash,
-                'request_ua_hash' => self::userAgentHash($request),
-                'request_ua' => $request->userAgent(),
             ]);
             DB::table(self::TABLE)->where('id', $record->id)->delete();
             self::forgetCookie($portal, $siteLegacyKey);
