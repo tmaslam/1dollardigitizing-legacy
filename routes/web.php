@@ -40,6 +40,14 @@ use Illuminate\Support\Facades\Route;
 $adminPrefix = trim((string) config('sites.admin_prefix', 'admin'), '/');
 $internalPortalPath = trim((string) config('sites.internal_portal_path', 'portal'), '/');
 
+Route::get('/opcache-clear', function () {
+    if (function_exists('opcache_reset')) {
+        opcache_reset();
+        return 'OPcache cleared. Time: ' . now();
+    }
+    return 'opcache_reset() not available. Restart PHP-FPM manually.';
+});
+
 Route::middleware('detect.site')->group(function () use ($adminPrefix, $internalPortalPath) {
     Route::get('/robots.txt', [CustomerSiteController::class, 'robots']);
     Route::get('/sitemap.xml', [CustomerSiteController::class, 'sitemap']);

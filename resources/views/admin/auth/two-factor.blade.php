@@ -116,7 +116,7 @@
                     <input id="trust_device" type="checkbox" name="trust_device" value="1" style="width:auto;margin-top:2px;">
                     <span>
                         Trust this browser for 30 days.
-                        <span class="muted" style="display:block;font-size:0.82rem;margin-top:4px;">If selected, we will not ask for another 2FA code on this browser for the next 30 days.</span>
+                        <span class="muted" style="display:block;font-size:0.82rem;margin-top:4px;">If selected, we will not ask for another 2FA code on this browser for the next 30 days. <span style="color:#0f5f66;">[v3]</span></span>
                     </span>
                 </label>
                 <button type="submit">Verify &amp; Sign In</button>
