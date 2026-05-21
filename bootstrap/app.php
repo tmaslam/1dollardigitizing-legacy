@@ -5,6 +5,7 @@ use App\Http\Middleware\EnsureAdminAuthenticated;
 use App\Http\Middleware\EnsureCustomerAuthenticated;
 use App\Http\Middleware\EnsureSupervisorAuthenticated;
 use App\Http\Middleware\EnsureTeamAuthenticated;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -23,6 +24,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'team.auth' => EnsureTeamAuthenticated::class,
             'supervisor.auth' => EnsureSupervisorAuthenticated::class,
         ]);
+
+        $middleware->web(AddQueuedCookiesToResponse::class);
 
         // Payment providers must be able to call back into the application without a browser CSRF token.
         $middleware->validateCsrfTokens(except: [
