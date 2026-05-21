@@ -169,6 +169,7 @@ Route::middleware('detect.site')->group(function () use ($adminPrefix, $internal
 
 Route::get('/v', [AdminAuthController::class, 'showLogin']);
 Route::get('/v/index.php', [AdminAuthController::class, 'showLogin'])->name('admin.login');
+Route::get('/v/login', [AdminAuthController::class, 'showLogin']);
 Route::post('/v/login', [AdminAuthController::class, 'login']);
 Route::get('/v/logout.php', [AdminAuthController::class, 'logout']);
 Route::get('/v/login-2fa', [AdminTwoFactorController::class, 'show'])->name('admin.2fa.show');
