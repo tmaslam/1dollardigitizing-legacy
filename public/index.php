@@ -3,6 +3,35 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 
+// AUTO-CLEAR: aggressively invalidate stale OPcache after deployments
+$opcacheMarker = __DIR__ . '/../storage/framework/opcache-cleared-' . date('Ymd-H');
+if (! is_file($opcacheMarker)) {
+    if (function_exists('opcache_reset')) {
+        opcache_reset();
+    }
+    // Also invalidate key files individually (covers multi-worker pools)
+    $invalidateTargets = [
+        __DIR__ . '/../routes/web.php',
+        __DIR__ . '/../app/Support/TrustedTwoFactorDevice.php',
+        __DIR__ . '/../app/Http/Controllers/AdminAuthController.php',
+        __DIR__ . '/../app/Http/Controllers/AdminTwoFactorController.php',
+        __DIR__ . '/../app/Http/Controllers/CustomerAuthController.php',
+        __DIR__ . '/../app/Http/Controllers/CustomerTwoFactorController.php',
+    ];
+    if (function_exists('opcache_invalidate')) {
+        foreach ($invalidateTargets as $target) {
+            if (is_file($target)) {
+                @opcache_invalidate($target, true);
+            }
+        }
+    }
+    // Clean up old markers
+    foreach (glob(__DIR__ . '/../storage/framework/opcache-cleared-*') ?: [] as $old) {
+        @unlink($old);
+    }
+    @file_put_contents($opcacheMarker, date('Y-m-d H:i:s'));
+}
+
 define('LARAVEL_START', microtime(true));
 
 $cachePath = __DIR__.'/../bootstrap/cache';
