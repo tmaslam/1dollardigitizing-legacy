@@ -77,11 +77,6 @@ class HostedPaymentProviders
 
     private static function sitePreferredProvider(?SiteContext $site = null): string
     {
-        $primaryLegacyKey = (string) config('sites.primary_legacy_key', '1dollar');
-        if ($site && strcasecmp($site->legacyKey, $primaryLegacyKey) === 0) {
-            return self::STRIPE;
-        }
-
         $siteProvider = trim((string) ($site?->activePaymentProvider ?? ''));
 
         if ($siteProvider === '' && $site?->id && Schema::hasTable('sites')) {
@@ -90,6 +85,11 @@ class HostedPaymentProviders
 
         if (in_array($siteProvider, array_keys(self::editableProviders()), true)) {
             return $siteProvider;
+        }
+
+        $primaryLegacyKey = (string) config('sites.primary_legacy_key', '1dollar');
+        if ($site && strcasecmp($site->legacyKey, $primaryLegacyKey) === 0) {
+            return self::TWOCHECKOUT;
         }
 
         return trim((string) config('services.payments.default_provider', self::STRIPE));
