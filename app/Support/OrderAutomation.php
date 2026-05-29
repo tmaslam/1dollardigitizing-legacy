@@ -149,11 +149,12 @@ class OrderAutomation
             ->reject(fn (Order $order) => self::shouldStayInApprovalWaiting($order))
             ->values();
 
-        if ($approvalWaiting->count() <= 1) {
+        $pendingFloor = max(1, (int) ($customer->customer_pending_order_limit ?? 0));
+        if ($approvalWaiting->count() <= $pendingFloor) {
             return;
         }
 
-        foreach ($approvalWaiting->slice(0, $approvalWaiting->count() - 1) as $order) {
+        foreach ($approvalWaiting->slice(0, $approvalWaiting->count() - $pendingFloor) as $order) {
             $amount = self::orderAmount($order);
             if ($amount <= 0) {
                 continue;
