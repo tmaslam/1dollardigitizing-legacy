@@ -83,6 +83,21 @@
         </section>
     @endif
 
+    @if ($customerComments->isNotEmpty() || trim((string) $order->comments2) !== '')
+    <section class="card" style="border-left:4px solid #e53e3e;">
+        <div class="card-body">
+            <h3 style="margin:0 0 6px;font-size:1.15rem;color:#c53030;">&#9888; Customer Revision Notes</h3>
+            <p class="muted" style="margin:0 0 14px;">The customer disapproved this order and left the following feedback.</p>
+            @foreach ($customerComments as $comment)
+                <p style="margin:0 0 8px;">{{ $comment->comments }}</p>
+            @endforeach
+            @if ($customerComments->isEmpty() && trim((string) $order->comments2) !== '')
+                <p style="margin:0;">{{ $order->comments2 }}</p>
+            @endif
+        </div>
+    </section>
+    @endif
+
     <section class="card">
         <div class="card-body">
             <h3 style="margin:0 0 6px;font-size:1.15rem;">Shared Instructions</h3>

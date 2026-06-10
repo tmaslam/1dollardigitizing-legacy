@@ -58,6 +58,7 @@ class TeamOrderDetailController extends Controller
             'backUrl' => $this->backUrl($queueKey),
             'backLabel' => TeamWorkQueues::label($queueKey),
             'selfUrl' => $this->detailUrl($order, $mode, $queueKey),
+            'customerComments' => OrderComment::query()->where('order_id', $order->order_id)->where('comment_source', 'customerComments')->latest('id')->get(),
             'sharedComments' => DownstreamSharing::sharedComments($order->order_id),
             'teamComments' => OrderComment::query()->where('order_id', $order->order_id)->where('comment_source', 'team')->latest('id')->get(),
             'sharedAttachments' => Attachment::query()->where('order_id', $order->order_id)->where('file_source', 'orderTeamImages')->orderBy('id')->get(),
