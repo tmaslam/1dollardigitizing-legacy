@@ -307,6 +307,28 @@ class TeamOrderDetailController extends Controller
             $content[] = '';
         }
 
+        $revisionComments = OrderComment::query()
+            ->where('order_id', $order->order_id)
+            ->where('comment_source', 'customerComments')
+            ->latest('id')
+            ->get();
+        $revisionText = trim((string) ($order->comments2 ?? ''));
+
+        if ($revisionComments->isNotEmpty() || $revisionText !== '') {
+            $content[] = '*** CUSTOMER REVISION NOTES (Order Disapproved) ***';
+            $content[] = '';
+            foreach ($revisionComments as $rc) {
+                $content[] = (string) $rc->comments;
+                $content[] = '';
+            }
+            if ($revisionComments->isEmpty() && $revisionText !== '') {
+                $content[] = $revisionText;
+                $content[] = '';
+            }
+            $content[] = '****************************************************';
+            $content[] = '';
+        }
+
         $content[] = 'Customer Comments:';
         $content[] = '';
         foreach (DownstreamSharing::sharedComments($order->order_id) as $comment) {
